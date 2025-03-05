@@ -1,46 +1,31 @@
-import React, { useEffect } from "react";
+import { ConfigProvider, Typography } from "antd";
+import React from "react";
+import { Route, Routes } from "react-router-dom";
 import styled from "styled-components";
 
-import { useAppDispatch } from "../hooks/useAppDispatch";
-import { useTypedSelector } from "../hooks/useTypedSelector";
-import { fetchUsers, selectUsers } from "../redux/user/userSlice";
+import { UsersPage } from "../pages/UsersPage";
+import { BlogPost } from "./BlogPost/BlogPost";
 import { GlobalStyles } from "./GlobalStyles/GlobalStyles";
 
 const StyledWrapper = styled.div`
   padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
-export const App = () => {
-  const dispatch = useAppDispatch();
-  const users = useTypedSelector(selectUsers);
-  const subsetOfUsers = users.slice(0, 10); // TODO: Remove this when you have found a better way to not show all users at once
+const { Title } = Typography;
 
-  useEffect(() => {
-    dispatch(fetchUsers());
-  }, []);
-
-  return (
+export const App = () => (
+  <ConfigProvider>
     <StyledWrapper>
       <GlobalStyles />
+      <Title level={2}>NaviPartner Tech Test</Title>
+      <Title level={4}>User Management System</Title>
 
-      <h1>NaviPartner Tech Test</h1>
-
-      <h2>Create your app here!</h2>
-      <p>Let's get you started:</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          {subsetOfUsers.map((user) => (
-            <tr key={user.id}>
-              <td>{user.first_name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Routes>
+        <Route element={<UsersPage />} path="/" />
+        <Route element={<BlogPost />} path="/blog/:id" />
+      </Routes>
     </StyledWrapper>
-  );
-};
+  </ConfigProvider>
+);

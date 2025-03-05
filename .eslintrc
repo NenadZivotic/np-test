@@ -1,6 +1,48 @@
 {
-  "extends": "sammy",
+  "extends": [
+    "sammy",
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "plugins": ["react", "jsx-a11y"],
   "rules": {
-    "react-intl-sammy/missing-formatted-message": "off"
+    "react-intl-sammy/missing-formatted-message": "off",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/aria-role": "error",
+    "jsx-a11y/no-noninteractive-tabindex": "warn",
+    "jsx-a11y/label-has-associated-control": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": ["error", { "allow": ["warn", "error", "log"] }]
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "globals": {
+    "JSX": true
   }
 }
