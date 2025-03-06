@@ -1,41 +1,58 @@
-import { User } from "../../data/data";
-import reducer, { fetchUsers, UserState } from "../user/userSlice";
+import { getUsers } from "../../data/data";
+import { setupStore } from "../store";
+import userReducer, { fetchUsers, removeUser, UserState } from "./userSlice";
 
-const TestUsers: User[] = [
-  {
-    "id": 1,
-    "first_name": "John",
-    "last_name": "Doe",
-    "email": "test@test.org",
-    "gender": "Male",
-    "ip_address": "127.0.0.1",
-  },
-  {
-    "id": 2,
-    "first_name": "Jane",
-    "last_name": "Doe",
-    "email": "test-second@test.org",
-    "gender": "Female",
-    "ip_address": "0.0.0.0",
-  },
-];
+jest.mock("../../data/data", () => ({
+  getUsers: jest.fn(),
+}));
 
-describe("usersSlice", () => {
+describe("userSlice", () => {
+  let store = setupStore();
+
+  beforeEach(() => {
+    store = setupStore();
+  });
+
   it("should return the initial state", () => {
-    expect(reducer(undefined, { type: undefined })).toEqual({
+    expect(userReducer(undefined, { type: undefined })).toEqual({
       userList: [],
     });
   });
 
-  it("adds users to list when fetched", () => {
-    const action = { type: fetchUsers.fulfilled.type, payload: TestUsers };
-
-    const previousState: UserState = {
-      userList: [],
+  it("should remove a user by id", () => {
+    const initialState: UserState = {
+      userList: [
+        {
+          id: 1,
+          first_name: "John Doe",
+          last_name: "Doe",
+          email: "john@example.com",
+          gender: "Male",
+          ip_address: "127.0.0.1",
+        },
+        {
+          id: 2,
+          first_name: "Jane Doe",
+          last_name: "Doe",
+          email: "jane@example.com",
+          gender: "Female",
+          ip_address: "0.0.0.0",
+        },
+      ],
     };
+    const nextState = userReducer(initialState, removeUser(1));
 
-    expect(reducer(previousState, action)).toEqual({
-      userList: TestUsers,
-    });
+    expect(nextState.userList).toHaveLength(1);
+    expect(nextState.userList[0].id).toBe(2);
+  });
+
+  it("should fetch users and update state", async () => {
+    const mockUsers = [{ id: 1, name: "John Doe" }];
+    (getUsers as jest.Mock).mockResolvedValue(mockUsers);
+
+    await store.dispatch(fetchUsers());
+
+    const state = store.getState().user;
+    expect(state.userList).toEqual(mockUsers);
   });
 });

@@ -38,22 +38,18 @@ export const UserBlogPosts = ({
   userId,
   onBlogPostClick,
 }: UserBlogPostsProps) => {
-  // use RTK Query to fetch blog posts
   const { data: allPosts = [], isLoading, error } = useGetBlogPostsQuery();
 
-  // show error message if fetching fails
   useEffect(() => {
     if (error) {
       message.error("Failed to fetch blog posts");
     }
   }, [error]);
 
-  // filter posts for the current user
   const blogPosts = allPosts.filter(
     (post: BlogPostType) => post.userId === userId,
   );
 
-  // use RTK Query mutation for deleting blog posts
   const [deleteBlogPost] = useDeleteBlogPostMutation();
 
   const handleDeleteBlogPost = async (blogPostId: string) => {
@@ -72,14 +68,7 @@ export const UserBlogPosts = ({
       key: "title",
       ellipsis: true,
       width: "60%",
-      render: (text, record) => (
-        <Typography.Text
-          onClick={() => onBlogPostClick(record.id)}
-          style={{ cursor: "pointer" }}
-        >
-          {text}
-        </Typography.Text>
-      ),
+      render: (text) => <Typography.Text>{text}</Typography.Text>,
     },
     {
       title: "Date Posted",
@@ -134,6 +123,21 @@ export const UserBlogPosts = ({
         <Table
           columns={columns}
           dataSource={blogPosts}
+          onRow={(record) => ({
+            style: { cursor: "pointer" },
+            onClick: (event) => {
+              event.stopPropagation();
+              const target = event.target as HTMLElement;
+              if (
+                target.closest("button") ||
+                target.closest("a") ||
+                target.closest(".ant-dropdown")
+              ) {
+                return;
+              }
+              onBlogPostClick(record.id);
+            },
+          })}
           pagination={false}
           rowKey="id"
           size="small"

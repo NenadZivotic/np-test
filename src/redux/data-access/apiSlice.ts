@@ -11,8 +11,12 @@ import {
   User,
 } from "../../data/data";
 
+// define route handler types for better type safety
+type RouteHandler = {
+  [method: string]: (body?: unknown) => Promise<unknown>;
+};
+
 // create a custom base query that uses the data module functions
-// this allows us to use RTK Query with the existing data module
 const dataModuleBaseQuery =
   () =>
   async ({
@@ -25,47 +29,53 @@ const dataModuleBaseQuery =
     body?: unknown;
   }) => {
     try {
-      let result;
-
-      // route the request to the appropriate data module function
-      switch (url) {
-        case "/users":
-          if (method === "GET") {
-            result = await getUsers();
-          } else if (method === "DELETE" && body) {
-            result = await deleteUser(body as number);
-          }
-          break;
-        case "/blogPosts":
-          if (method === "GET") {
-            result = await getMembers();
-          } else if (method === "POST" && body) {
-            result = await addBlogPost(body as BlogPost);
-          } else if (method === "DELETE" && body) {
-            result = await deleteBlogPost(body as string);
-          }
-          break;
-        case "/blogPosts/edit":
-          if (method === "PUT" && body) {
-            const { id, title, content, datePosted, userId } = body as {
+      const routes: Record<string, RouteHandler> = {
+        "/users": {
+          GET: () => getUsers(),
+          DELETE: (id) => deleteUser(id as number),
+        },
+        "/blogPosts": {
+          GET: () => getMembers(),
+          POST: (post) => addBlogPost(post as BlogPost),
+          DELETE: (id) => deleteBlogPost(id as string),
+        },
+        "/blogPosts/edit": {
+          PUT: (data) => {
+            const { id, title, content, datePosted, userId } = data as {
               id: string;
               title: string;
               content: string;
               datePosted: string;
               userId: number;
             };
-            result = await editBlogPost(id, {
+            return editBlogPost(id, {
               title,
               body: content,
               userId,
               datePosted,
             });
-          }
-          break;
-        default:
-          return {
-            error: { status: 404, data: "Not Found" },
-          };
+          },
+        },
+      };
+
+      // get the handler for the requested route and method
+      const routeHandlers = routes[url];
+      if (!routeHandlers) {
+        return { error: { status: 404, data: "Not Found" } };
+      }
+
+      const handler = routeHandlers[method];
+      if (!handler) {
+        return { error: { status: 405, data: "Method Not Allowed" } };
+      }
+
+      const result = await handler(body);
+
+      // ensure we always return a valid result
+      if (result === undefined) {
+        return {
+          data: method === "DELETE" ? true : {},
+        };
       }
 
       return { data: result };
